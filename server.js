@@ -3,6 +3,7 @@ const { createServer } = require("http");
 const { Server } = require("socket.io");
 const { generateResponse } = require('./src/service/ai.service');
 require('dotenv').config();
+const chatHistory = [];
 
 const httpServer = createServer(app);
 const io = new Server(httpServer, { /* options */ });
@@ -13,8 +14,20 @@ io.on("connection", (socket) => {
     console.log("User disconnected");
   });
 socket.on("ai-msg",async(data) =>{
-  const response = await generateResponse(data);
-  console.log("AI msg received",response);
+  console.log("Data sent by user:",data);
+
+  chatHistory.push({
+    role:"user",
+    parts:[{text:data}]  //user data send kr rha hai ,or data ko chatHistory me push kr rha hai
+  })
+
+  const response = await generateResponse(chatHistory);
+
+  chatHistory.push({
+    role:"model",
+    parts:[{text:response}]  //AI model data send kr rha hai ,or response ko chatHistory me push krke show kr rha hai
+  })
+  console.log("Response by AI:",response);
 
   socket.emit("ai-msg-response",response);
 })
