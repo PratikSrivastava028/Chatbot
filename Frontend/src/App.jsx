@@ -103,6 +103,12 @@ function App() {
         reconnectionDelay: 1000 * Math.min(retryCount + 1, 5),
         timeout: 10000
       });
+      useEffect(() => {
+    fetch("https://chatbot-ieqa.onrender.com") // backend URL
+      .then(res => res.json())
+      .then(data => setMessage(data.message))
+      .catch(err => console.error(err));
+  }, []);
 
       socketInstance.on('connect', () => {
         console.log('Connected to server');
