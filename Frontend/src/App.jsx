@@ -2,7 +2,10 @@ import { useState, useEffect, useCallback, useRef, memo } from 'react';
 import './App.css';
 import { io } from "socket.io-client";
 
-// ChatHeader component
+// Backend base URL (change only if Render URL changes)
+const BACKEND_URL = "https://chatbot-ieqa.onrender.com";
+
+// ChatHeader
 const ChatHeader = memo(() => (
   <div className="chat-header">
     <h1>PratChat</h1>
@@ -24,7 +27,7 @@ const Message = memo(({ message, formatTime }) => {
   );
 });
 
-// TypingIndicator
+// Typing Indicator
 const TypingIndicator = memo(() => (
   <div className="message-wrapper incoming">
     <div className="message typing-indicator">
@@ -37,7 +40,7 @@ const TypingIndicator = memo(() => (
   </div>
 ));
 
-// Chat Input Form
+// Input form
 const ChatInputForm = memo(({ input, onInputChange, onSubmit }) => (
   <form className="chat-input-form" onSubmit={onSubmit}>
     <input
@@ -72,9 +75,9 @@ function App() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [conversations, isAITyping]);
 
-  // Fetch initial message from backend
+  // ✅ Fetch welcome message from backend
   useEffect(() => {
-    fetch("https://chatbot-ieqa.onrender.com/api/hello") // backend URL
+    fetch(`${BACKEND_URL}/api/hello`)
       .then(res => res.json())
       .then(data => {
         setConversations([{
@@ -83,19 +86,19 @@ function App() {
           timestamp: new Date()
         }]);
       })
-      .catch(err => console.error(err));
+      .catch(err => console.error("Error fetching hello:", err));
   }, []);
 
-  // Socket.io connection
+  // ✅ Setup socket.io connection
   useEffect(() => {
-    const socketInstance = io("https://chatbot-ieqa.onrender.com"); // backend Socket.io URL
+    const socketInstance = io(BACKEND_URL);
 
     socketInstance.on('connect', () => {
-      console.log('Connected to server');
+      console.log('✅ Connected to backend via Socket.io');
     });
 
     socketInstance.on('disconnect', () => {
-      console.log('Disconnected from server');
+      console.log('❌ Disconnected from backend');
     });
 
     socketInstance.on('ai-msg-response', (response) => {
@@ -112,7 +115,7 @@ function App() {
     return () => socketInstance.disconnect();
   }, []);
 
-  // Handle submit
+  // ✅ Handle sending messages
   const handleSubmit = useCallback((e) => {
     e.preventDefault();
     const trimmedInput = input.trim();
@@ -126,11 +129,11 @@ function App() {
       type: 'outgoing',
       timestamp
     }]);
-    
+
     setInput('');
     setIsAITyping(true);
 
-    // Emit to backend
+    // Send to backend
     socket.emit("ai-msg", trimmedInput);
   }, [input, socket]);
 
@@ -143,7 +146,7 @@ function App() {
       <ChatHeader />
       <div className="chat-messages">
         {conversations.map((message, index) => (
-          <Message 
+          <Message
             key={`${message.timestamp.getTime()}-${index}`}
             message={message}
             formatTime={formatTime}
@@ -152,7 +155,7 @@ function App() {
         {isAITyping && <TypingIndicator />}
         <div ref={messagesEndRef} />
       </div>
-      <ChatInputForm 
+      <ChatInputForm
         input={input}
         onInputChange={handleInputChange}
         onSubmit={handleSubmit}
