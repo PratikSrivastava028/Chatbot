@@ -6,7 +6,14 @@ require('dotenv').config();
 const chatHistory = [];
 
 const httpServer = createServer(app);
-const io = new Server(httpServer, { /* options */ });
+const io = new Server(httpServer, { 
+  cors: {
+    origin: "http://localhost:5173", // Replace with your frontend URL
+    methods: ["GET", "POST"],
+    allowedHeaders: ["my-custom-header"],
+    credentials: true
+  }
+});
 
 io.on("connection", (socket) => {
   console.log("A user connected");
